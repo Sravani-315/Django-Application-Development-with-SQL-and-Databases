@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Results - {{ course.name }}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .result-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 0;
+            margin-bottom: 30px;
+        }
+        .result-header.passed {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .result-header.failed {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+        .score-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .question-result {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+        }
+        .question-result.correct {
+            border-left-color: #38ef7d;
+            background-color: #f0fdf4;
+        }
+        .question-result.incorrect {
+            border-left-color: #f45c43;
+            background-color: #fef2f2;
+        }
+        .choice-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        .choice-item.correct {
+            background-color: #d1fae5;
+            border: 2px solid #10b981;
+        }
+        .choice-item.incorrect {
+            background-color: #fee2e2;
+            border: 2px solid #ef4444;
+        }
+        .choice-item.selected {
+            font-weight: bold;
+        }
+        .badge-large {
+            font-size: 1.5rem;
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Result Header -->
+    <div class="result-header {% if passed %}passed{% else %}failed{% endif %}">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center">
+                    {% if passed %}
+                        <h1 class="display-3">🎉 Congratulations! 🎉</h1>
+                        <p class="lead">You passed the exam!</p>
+                    {% else %}
+                        <h1 class="display-3">Exam Completed</h1>
+                        <p class="lead">Keep practicing - you'll get there!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Score Card -->
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="score-card text-center">
+                    <h2>{{ course.name }}</h2>
+                    <hr>
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <h3>Score</h3>
+                            <p class="display-4">{{ total_score }}/{{ max_score }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3>Percentage</h3>
+                            <p class="display-4">{{ percentage }}%</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3>Status</h3>
+                            <p>
+                                {% if passed %}
+                                    <span class="badge bg-success badge-large">PASSED</span>
+                                {% else %}
+                                    <span class="badge bg-danger badge-large">FAILED</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <hr class="mt-4">
+                    <p class="text-muted">Passing grade: 70%</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Results -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <h3 class="mb-4">Exam Results - Question by Question</h3>
+                
+                {% for result in question_results %}
+                <div class="question-result {% if result.is_correct %}correct{% else %}incorrect{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="mb-3">
+                            {{ forloop.counter }}. {{ result.question.question_text }}
+                            <span class="badge bg-secondary ms-2">{{ result.question.grade_points }} point(s)</span>
+                        </h5>
+                        {% if result.is_correct %}
+                            <span class="badge bg-success">✓ Correct</span>
+                        {% else %}
+                            <span class="badge bg-danger">✗ Incorrect</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-3">
+                        <strong>Choices:</strong>
+                        {% for choice in result.choices %}
+                        <div class="choice-item 
+                                    {% if choice.is_correct %}correct{% endif %}
+                                    {% if choice.id in result.selected_ids and not choice.is_correct %}incorrect{% endif %}
+                                    {% if choice.id in result.selected_ids %}selected{% endif %}">
+                            {% if choice.id in result.selected_ids %}
+                                <span class="badge bg-primary me-2">Your Answer</span>
+                            {% endif %}
+                            {% if choice.is_correct %}
+                                <span class="badge bg-success me-2">✓ Correct Answer</span>
+                            {% endif %}
+                            {{ choice.choice_text }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mt-5 mb-5">
+            <div class="col-12 text-center">
+                <a href="{% url 'onlinecourse:course_details' course.id %}" class="btn btn-primary btn-lg me-3">
+                    Retake Exam
+                </a>
+                <a href="{% url 'onlinecourse:index' %}" class="btn btn-secondary btn-lg">
+                    Back to Courses
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
